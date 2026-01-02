@@ -91,11 +91,19 @@ export const updateProduct = async (req: Request, res: Response) => {
       return;
     }
 
-    const product = await queries.updateProduct(id, {
-      title,
-      description,
-      imageUrl,
-    });
+    // Build update payload only with provided (non-undefined) fields
+    const updatePayload: Record<string, any> = {};
+    if (title !== undefined) updatePayload.title = title;
+    if (description !== undefined) updatePayload.description = description;
+    if (imageUrl !== undefined) updatePayload.imageUrl = imageUrl;
+
+    // Validate there's at least one field to update
+    if (Object.keys(updatePayload).length === 0) {
+      res.status(400).json({ error: "No updatable fields provided" });
+      return;
+    }
+
+    const product = await queries.updateProduct(id, updatePayload);
 
     res.status(200).json(product);
   } catch (error) {
