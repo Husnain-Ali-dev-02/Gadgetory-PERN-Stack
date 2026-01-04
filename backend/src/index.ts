@@ -12,6 +12,11 @@ import commentRoutes from "./routes/commentRoutes";
 
 const app = express();
 
+// If running behind a reverse proxy (load balancer, ingress), enable trust proxy
+// so that req.protocol and req.get('host') reflect original client request.
+// Set to `1` for a single proxy hop. Adjust if your deployment uses multiple hops.
+app.set("trust proxy", 1);
+
 app.use(cors({ origin: ENV.FRONTEND_URL, credentials: true }));
 app.use(clerkMiddleware());
 app.use(express.json());
@@ -19,9 +24,13 @@ app.use(express.urlencoded({ extended: true }));
 
 // Ensure uploads directory exists and serve it statically
 const uploadsDir = path.join(process.cwd(), "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
-}
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir);
+  }
+} catch (error) {
+  console.error("Failed to create uploads directory:", error);
+  process.exit(1);}
 app.use("/uploads", express.static(uploadsDir));
 
 app.get("/api/health", (req, res) => {
