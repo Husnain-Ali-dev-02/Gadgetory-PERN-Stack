@@ -17,10 +17,11 @@
     "@clerk/express": "^1.7.60",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "multer": "2.0.2",
     "drizzle-orm": "^0.44.7",
     "express": "^5.2.1",
-    "pg": "^8.16.3"
+    "multer": "2.0.2",
+    "pg": "^8.16.3",
+    "productify": "file:.."
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

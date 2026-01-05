@@ -1,0 +1,25 @@
+{
+  "name": "productify",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend && npm run build --prefix backend",
+    "start": "npm run db:push --prefix backend && npm run start --prefix backend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Husnain-Ali-dev-02/Gadgetory-PERN-Stack.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Husnain-Ali-dev-02/Gadgetory-PERN-Stack/issues"
+  },
+  "homepage": "https://github.com/Husnain-Ali-dev-02/Gadgetory-PERN-Stack#readme"
+}
