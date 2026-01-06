@@ -6,12 +6,13 @@
   "engines": {
     "node": "22.x"
   },
-  "scripts": {
-    "dev": "nodemon",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "db:push": "drizzle-kit push"
-  },
+"scripts": {
+  "dev": "nodemon",
+  "build": "tsc",
+  "start": "node dist/index.js",
+  "db:push": "drizzle-kit push"
+},
+
   "dependencies": {
     "@clerk/express": "^1.7.60",
     "cors": "^2.8.5",
