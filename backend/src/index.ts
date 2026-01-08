@@ -31,12 +31,12 @@ app.use(
   })
 );
 
-// Clerk middleware (requires secret key)
+// Clerk middleware
 app.use(clerkMiddleware());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure uploads directory exists (async safe)
+// Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
 fs.mkdir(uploadsDir, { recursive: true })
   .then(() => console.log("Uploads folder ready"))
@@ -44,7 +44,7 @@ fs.mkdir(uploadsDir, { recursive: true })
 
 app.use("/uploads", express.static(uploadsDir));
 
-// Health route
+// Health check route
 app.get("/api/health", (req, res) => {
   res.json({
     message:
@@ -62,16 +62,20 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/comments", commentRoutes);
 
-// Serve frontend in production
+// Serve React frontend in production
 if (ENV.NODE_ENV === "production") {
   const __dirname = path.resolve();
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  app.get("*", (req, res) =>
-    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"))
-  );
+  const frontendDist = path.join(__dirname, "../frontend/dist");
+
+  app.use(express.static(frontendDist));
+
+  // Catch-all route for React Router
+  app.get("/:path(.*)", (req, res) => {
+    res.sendFile(path.join(frontendDist, "index.html"));
+  });
 }
 
-// Listen on platform port
+// Start server
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("Server is up and running on PORT:", PORT);
+  console.log(`🚀 Server running on PORT: ${PORT}`);
 });
