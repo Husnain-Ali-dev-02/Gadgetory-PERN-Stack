@@ -33,15 +33,18 @@ app.use(
 
 // Clerk middleware
 app.use(clerkMiddleware());
+
+// Body parsing
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure uploads directory exists
+// Ensure uploads directory exists (async-safe)
 const uploadsDir = path.join(process.cwd(), "uploads");
 fs.mkdir(uploadsDir, { recursive: true })
   .then(() => console.log("Uploads folder ready"))
   .catch((err) => console.warn("Uploads folder creation failed:", err));
 
+// Serve uploads
 app.use("/uploads", express.static(uploadsDir));
 
 // Health check route
@@ -62,15 +65,16 @@ app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/comments", commentRoutes);
 
-// Serve React frontend in production
+// Serve frontend in production
 if (ENV.NODE_ENV === "production") {
   const __dirname = path.resolve();
   const frontendDist = path.join(__dirname, "../frontend/dist");
 
+  // Serve static files
   app.use(express.static(frontendDist));
 
-  // Catch-all route for React Router
-  app.get("/:path(.*)", (req, res) => {
+  // Catch-all route for SPA
+  app.get("*", (req, res) => {
     res.sendFile(path.join(frontendDist, "index.html"));
   });
 }
