@@ -1,6 +1,6 @@
 import express from "express";
 import cors from "cors";
-import fs from "fs";
+import fs from "fs/promises";
 import path from "path";
 
 import { ENV } from "./config/env";
@@ -11,29 +11,40 @@ import productRoutes from "./routes/productRoutes";
 import commentRoutes from "./routes/commentRoutes";
 
 const app = express();
-const PORT = ENV.PORT ?? 8000; 
+const PORT = ENV.PORT ?? 8000;
 
-// If running behind a reverse proxy (load balancer, ingress), enable trust proxy
-// so that req.protocol and req.get('host') reflect original client request.
-// Set to `1` for a single proxy hop. Adjust if your deployment uses multiple hops.
+console.log("🔥 ENV CHECK:", {
+  DATABASE_URL: !!ENV.DATABASE_URL,
+  CLERK_SECRET_KEY: !!ENV.CLERK_SECRET_KEY,
+  NODE_ENV: ENV.NODE_ENV,
+  FRONTEND_URL: ENV.FRONTEND_URL,
+});
+
+// Trust proxy if behind load balancer
 app.set("trust proxy", 1);
 
-app.use(cors({ origin: ENV.FRONTEND_URL, credentials: true }));
+// CORS for frontend
+app.use(
+  cors({
+    origin: ENV.FRONTEND_URL,
+    credentials: true,
+  })
+);
+
+// Clerk middleware (requires secret key)
 app.use(clerkMiddleware());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ensure uploads directory exists and serve it statically
+// Ensure uploads directory exists (async safe)
 const uploadsDir = path.join(process.cwd(), "uploads");
-try {
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir);
-  }
-} catch (error) {
-  console.error("Failed to create uploads directory:", error);
-  process.exit(1);}
+fs.mkdir(uploadsDir, { recursive: true })
+  .then(() => console.log("Uploads folder ready"))
+  .catch((err) => console.warn("Uploads folder creation failed:", err));
+
 app.use("/uploads", express.static(uploadsDir));
 
+// Health route
 app.get("/api/health", (req, res) => {
   res.json({
     message:
@@ -46,22 +57,21 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+// API routes
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
-app.use("/api/comments", commentRoutes); 
-if(ENV.NODE_ENV === "production"){
+app.use("/api/comments", commentRoutes);
+
+// Serve frontend in production
+if (ENV.NODE_ENV === "production") {
   const __dirname = path.resolve();
-
-  // serve static files from frontend/dist
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
-
-  // handle SPA routing - send all non-API routes to index.html - react app
-  app.get("/{*any}", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-  });
-
+  app.get("/*", (req, res) =>
+    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"))
+  );
 }
 
+// Listen on platform port
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server is up and running on PORT:", PORT);
 });
